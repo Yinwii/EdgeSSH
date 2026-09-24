@@ -1,0 +1,23 @@
+[Unit]
+Description=EdgeSSH - self-hosted WebSSH workspace (workerd runtime)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 按实际部署路径修改 WorkingDirectory 与 ExecStart
+WorkingDirectory=/opt/edgessh
+ExecStart=/usr/bin/node server/serve.mjs
+Restart=on-failure
+RestartSec=3
+# .env 中的密钥通过该服务读取；如需用 systemd 直接管理环境变量，可用 EnvironmentFile=
+EnvironmentFile=-/opt/edgessh/.env
+User=edgessh
+Group=edgessh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/edgessh/server/data
+
+[Install]
+WantedBy=multi-user.target

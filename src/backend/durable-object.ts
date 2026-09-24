@@ -113,6 +113,7 @@ export class SSHSessionDO implements DurableObject {
   }
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+    console.warn(`[SSHSessionDO] 收到 WebSocket 消息: ${typeof message === 'string' ? message.slice(0, 200) : `<binary ${message.byteLength}B>`}`);
     const processSession = this.processSessions.get(ws);
     if (processSession || this.isProcessWebSocket(ws)) {
       try {
@@ -164,6 +165,7 @@ export class SSHSessionDO implements DurableObject {
       if (config.port === 25) throw new Error('Cloudflare Workers cannot connect to outbound TCP port 25');
       const verifiedAddresses = await assertPublicTarget(config.host);
       this.assertConnectionActive(ws, pending);
+      console.warn(`[SSHSessionDO] ${config.username}@${toSocketHostname(config.host)}:${config.port} 开始 TCP 连接`);
       ws.send(JSON.stringify({
         type: 'status',
         event: 'tcp_connecting',
@@ -173,6 +175,7 @@ export class SSHSessionDO implements DurableObject {
       // Connect to the exact address that passed SSRF validation. Keeping the
       // original hostname only for host-key pinning prevents DNS rebinding.
       const socket = await this.openVerifiedAddress(verifiedAddresses, config.port, pending);
+      console.warn(`[SSHSessionDO] ${config.username}@${toSocketHostname(config.host)}:${config.port} TCP 已建立，启动 SSH 握手`);
       this.assertConnectionActive(ws, pending, socket);
 
       const ssh = new SSHSession(ws, socket, config);
@@ -397,6 +400,7 @@ export class SSHSessionDO implements DurableObject {
         return socket;
       } catch (error) {
         lastError = error;
+        console.warn(`[SSHSessionDO] TCP 连接到 ${toSocketHostname(address)}:${port} 失败: ${error instanceof Error ? error.message : String(error)}`);
         this.closePendingSocket(pending, socket);
         if (pending.cancelled) throw error;
       } finally {
@@ -407,6 +411,7 @@ export class SSHSessionDO implements DurableObject {
   }
 
   private reject(ws: WebSocket, message: string): void {
+    console.warn(`[SSHSessionDO] 连接失败: ${message}`);
     try { ws.send(JSON.stringify({ type: 'error', event: 'connection_failed', message })); } catch { /* already closed */ }
     this.cleanup(ws);
     try { ws.close(1011, 'SSH connection failed'); } catch { /* already closed */ }

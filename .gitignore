@@ -14,3 +14,6 @@ scripts-tmp/
 .wrangler.generated.toml
 test-results/
 playwright-report/
+server/data/
+build/
+!server/.env.example

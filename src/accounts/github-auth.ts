@@ -28,11 +28,13 @@ function setCookie(name: string, value: string, maxAge: number): string {
 
 // 使用 HKDF 做用途隔离，不直接把资料加密密钥用于签名，也不新增用户需要维护的密钥。
 async function signingKey(secret: string): Promise<Uint8Array> {
-  const material = await crypto.subtle.importKey('raw', new Uint8Array(base64url.decode(secret)), 'HKDF', false, ['deriveBits']);
+  // 部署脚本生成的是标准 Base64（可含 +/=），base64url 字母表会拒绝 +/，
+  // 这里统一归一化后解码，两种编码都兼容。
+  const material = Uint8Array.from(atob(secret.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
   return new Uint8Array(await crypto.subtle.deriveBits({
     name: 'HKDF', hash: 'SHA-256', salt: encoder.encode('edgessh:v1'),
     info: encoder.encode('github-oauth-cookie'),
-  }, material, 256));
+  }, await crypto.subtle.importKey('raw', material, 'HKDF', false, ['deriveBits']), 256));
 }
 
 function audience(env: GitHubConfig, purpose: string): string {
@@ -46,10 +48,15 @@ async function sign(env: GitHubConfig, purpose: string, payload: JWTPayload, sec
 }
 
 async function verify(env: GitHubConfig, purpose: string, token: string): Promise<JWTPayload> {
-  const { payload } = await jwtVerify(token, await signingKey(env.ENCRYPTION_KEY), {
-    issuer: env.APP_ORIGIN, audience: audience(env, purpose), algorithms: ['HS256'], requiredClaims: ['exp', 'iat'],
-  });
-  return payload;
+  try {
+    const { payload } = await jwtVerify(token, await signingKey(env.ENCRYPTION_KEY), {
+      issuer: env.APP_ORIGIN, audience: audience(env, purpose), algorithms: ['HS256'], requiredClaims: ['exp', 'iat'],
+    });
+    return payload;
+  } catch (error) {
+    console.warn(`[EdgeSSH][debug] verify(purpose=${purpose}) failed: ${error instanceof Error ? `${error.message} (${(error as { code?: string }).code})` : String(error)}; APP_ORIGIN=${env.APP_ORIGIN}; audience=${audience(env, purpose)}; keyPrefix=${env.ENCRYPTION_KEY.slice(0, 6)}`);
+    throw error;
+  }
 }
 
 function redirect(location: string, cookies: string[] = []): Response {

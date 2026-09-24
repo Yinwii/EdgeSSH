@@ -4,13 +4,16 @@ import { accessToken } from './access-token.ts';
 import { APIError } from './http.ts';
 import { authProvider } from './auth-provider.ts';
 import { githubAccount } from './github-auth.ts';
+import { passwordAccount } from './password-auth.ts';
 
 export interface Account { id: string; username: string }
 const resolvers = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
 export async function currentAccount(request: Request, env: Env): Promise<Account> {
-  const identity = authProvider(env) === 'github'
-    ? await githubAccount(request, env) : await accessAccount(request, env);
+  const provider = authProvider(env);
+  const identity = provider === 'github' ? await githubAccount(request, env)
+    : provider === 'password' ? await passwordAccount(request, env)
+      : await accessAccount(request, env);
   // 本项目只有一个管理员。认证来源可切换，资料的加密 AAD 与所有者 ID 必须保持不变。
   return { id: env.ADMIN_ACCOUNT_ID || identity.id, username: identity.username };
 }

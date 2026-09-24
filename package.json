@@ -12,8 +12,17 @@
     "test": "node --test --experimental-strip-types tests/*.test.ts",
     "test:browser": "playwright test",
     "check": "npm run typecheck && npm run test && wrangler deploy --dry-run --outdir .wrangler/build",
+    "build:worker": "wrangler deploy --dry-run --outdir build/worker",
+    "build:server": "npm run build:web && npm run build:worker",
+    "start:server": "node server/serve.mjs",
+    "start": "node server/cli.mjs start",
+    "stop": "node server/cli.mjs stop",
+    "restart": "node server/cli.mjs restart",
+    "status": "node server/cli.mjs status",
+    "log": "node server/cli.mjs log --lines 50",
     "deploy:validate": "node --experimental-strip-types scripts/deploy.ts --validate-only",
-    "deploy": "node --experimental-strip-types scripts/deploy.ts"
+    "deploy": "node --experimental-strip-types scripts/deploy.ts",
+    "hash-password": "node --experimental-strip-types scripts/hash-password.ts"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
@@ -21,7 +30,9 @@
     "@xterm/xterm": "^6.0.0",
     "jose": "^6.2.12",
     "mappo": "^0.3.0",
-    "simple-icons": "^15.22.0"
+    "miniflare": "^4.20260730.0",
+    "simple-icons": "^15.22.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260727.1",
