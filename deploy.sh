@@ -32,8 +32,24 @@ else
   echo "[deploy] $INSTALL_DIR 已有非 git 内容" >&2; exit 1
 fi
 
-# 还原备份（可选）
-[[ -n "$BACKUP" && -f "$BACKUP" ]] && tar -xzf "$BACKUP" -C "$INSTALL_DIR"
+# 还原备份（可选）：tarball 由 migrate.cmd 生成，里面可能有
+#   .env                        配置
+#   server/data/ENCRYPTION_KEY  AES-GCM 密钥
+#   server/data/state/          D1 数据库（含加密的主机记录 + 密码 + 私钥）
+# 覆盖到 $INSTALL_DIR/ 时路径自动对齐。
+if [[ -n "$BACKUP" && -f "$BACKUP" ]]; then
+  echo "[deploy] 还原备份：$BACKUP"
+  echo "[deploy]   内容清单："
+  tar -tzf "$BACKUP" 2>/dev/null | sed 's/^/    /'
+  if tar -tzf "$BACKUP" 2>/dev/null | grep -qx 'server/data/ENCRYPTION_KEY' && [[ -f "$INSTALL_DIR/server/data/ENCRYPTION_KEY" ]]; then
+    OLD_KEY_BAK="$INSTALL_DIR/server/data/ENCRYPTION_KEY.old-$(date -Iseconds | tr : -)"
+    cp "$INSTALL_DIR/server/data/ENCRYPTION_KEY" "$OLD_KEY_BAK"
+    chmod 600 "$OLD_KEY_BAK" 2>/dev/null || true
+    echo "[deploy] 已备份远端旧 ENCRYPTION_KEY → $OLD_KEY_BAK（防止新 key 覆盖后丢数据）"
+  fi
+  tar -xzf "$BACKUP" -C "$INSTALL_DIR"
+  echo "[deploy] 还原完成"
+fi
 
 # .env 初始化（首次部署且用户已通过 PORT 环境变量指定端口时生效；
 # 模板默认 PORT=8787，sed 只改这一行，其余配置（GitHub OAuth、APP_ORIGIN 等）保留为模板注释）。

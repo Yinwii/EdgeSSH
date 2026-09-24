@@ -1,82 +1,82 @@
 chcp 936 >nul 2>&1
 title EdgeSSH :: deploy
 @echo off
-rem EdgeSSH Ò»¼ü²¿Êğ£¨Windows£©£º×° Node 22£¨ÈçÈ±£©¡ú ¿ËÂ¡/À­È¡×îĞÂ´úÂë ¡ú »¹Ô­±¸·İ£¨ÈçÖ¸¶¨£©¡ú Æô¶¯
+rem EdgeSSH ä¸€é”®éƒ¨ç½²ï¼ˆWindowsï¼‰ï¼šè£… Node 22ï¼ˆå¦‚ç¼ºï¼‰â†’ å…‹éš†/æ‹‰å–æœ€æ–°ä»£ç  â†’ è¿˜åŸå¤‡ä»½ï¼ˆå¦‚æŒ‡å®šï¼‰â†’ å¯åŠ¨
 rem
-rem ÓÃ·¨£¨Ë«»÷»òÖ±½ÓÔËĞĞ¼´¿É£©£º
+rem ç”¨æ³•ï¼ˆåŒå‡»æˆ–ç›´æ¥è¿è¡Œå³å¯ï¼‰ï¼š
 rem   deploy.cmd
 rem
-rem Æô¶¯ºó°´ÌáÊ¾ÊäÈë°²×°Ä¿Â¼¡¢¶Ë¿Ú£¨Ä¬ÈÏ 8787£©¡¢£¨¿ÉÑ¡£©±¸·İ°üÂ·¾¶
-rem Ò²¿ÉÍ¨¹ı»·¾³±äÁ¿Ô¤Éè£ºset PORT=9000 && deploy.cmd
-rem Ç¨ÒÆÔ¶³Ìµ÷ÓÃ£¨migrate-to-windows.cmd£©£ºÉè MIG_TARGET / MIG_BACKUP / DEPLOY_BATCH=1£¬
-rem   ´ËÊ±Ìø¹ı½»»¥Óë pause£¬È«³ÌÎŞÈËÖµÊØ¡£
-rem Ç°ÖÃ£ºWindows 10 1809+£¨×Ô´ø OpenSSH ¿Í»§¶Ë + winget£©
+rem å¯åŠ¨åæŒ‰æç¤ºè¾“å…¥å®‰è£…ç›®å½•ã€ç«¯å£ï¼ˆé»˜è®¤ 8787ï¼‰ã€ï¼ˆå¯é€‰ï¼‰å¤‡ä»½åŒ…è·¯å¾„
+rem ä¹Ÿå¯é€šè¿‡ç¯å¢ƒå˜é‡é¢„è®¾ï¼šset PORT=9000 && deploy.cmd
+rem è¿ç§»è¿œç¨‹è°ƒç”¨ï¼ˆmigrate-to-windows.cmdï¼‰ï¼šè®¾ MIG_TARGET / MIG_BACKUP / DEPLOY_BATCH=1ï¼Œ
+rem   æ­¤æ—¶è·³è¿‡äº¤äº’ä¸ pauseï¼Œå…¨ç¨‹æ— äººå€¼å®ˆã€‚
+rem å‰ç½®ï¼šWindows 10 1809+ï¼ˆè‡ªå¸¦ OpenSSH å®¢æˆ·ç«¯ + wingetï¼‰
 setlocal EnableDelayedExpansion
 
 set "SCRIPT_DIR=%~dp0"
 set "INSTALL_DIR="
 set "BACKUP="
 
-rem ---- Ç¨ÒÆÔ¶³Ìµ÷ÓÃ×¢Èë£¨»·¾³±äÁ¿´«²Î£¬±ÜÃâ¿ç shell ÒıºÅ×ªÒå£©----
+rem ---- è¿ç§»è¿œç¨‹è°ƒç”¨æ³¨å…¥ï¼ˆç¯å¢ƒå˜é‡ä¼ å‚ï¼Œé¿å…è·¨ shell å¼•å·è½¬ä¹‰ï¼‰----
 if defined MIG_TARGET set "INSTALL_DIR=!MIG_TARGET!"
 if defined MIG_BACKUP set "BACKUP=!MIG_BACKUP!"
-rem DEPLOY_BATCH=1 Ê±½øÈë·Ç½»»¥Ä£Ê½£ºÌø¹ıÑ¯ÎÊÓë pause£¨¹© ssh Ô¶³Ìµ÷ÓÃ£©
+rem DEPLOY_BATCH=1 æ—¶è¿›å…¥éäº¤äº’æ¨¡å¼ï¼šè·³è¿‡è¯¢é—®ä¸ pauseï¼ˆä¾› ssh è¿œç¨‹è°ƒç”¨ï¼‰
 
-rem ---- ½»»¥Ê½Ñ¯ÎÊ£¨½öµ±²ÎÊı/»·¾³±äÁ¿Î´Ìá¹©Ê±£©----
-rem ×¢Òâ£ºset /p ÔÚ¿ÕÊäÈëÊ±»áĞ´Èëµ¥¸ö¿Õ¸ñ£¬ĞèÊÖ¶¯Çåµô¡£
+rem ---- äº¤äº’å¼è¯¢é—®ï¼ˆä»…å½“å‚æ•°/ç¯å¢ƒå˜é‡æœªæä¾›æ—¶ï¼‰----
+rem æ³¨æ„ï¼šset /p åœ¨ç©ºè¾“å…¥æ—¶ä¼šå†™å…¥å•ä¸ªç©ºæ ¼ï¼Œéœ€æ‰‹åŠ¨æ¸…æ‰ã€‚
 if not defined INSTALL_DIR (
-    set /p "INSTALL_DIR=°²×°Ä¿Â¼£¨»Ø³µ = ½Å±¾ËùÔÚÄ¿Â¼ !SCRIPT_DIR!£©£º"
+    set /p "INSTALL_DIR=å®‰è£…ç›®å½•ï¼ˆå›è½¦ = è„šæœ¬æ‰€åœ¨ç›®å½• !SCRIPT_DIR!ï¼‰ï¼š"
     if "!INSTALL_DIR!"==" " set "INSTALL_DIR="
     if "!INSTALL_DIR!"=="" set "INSTALL_DIR=!SCRIPT_DIR!"
 )
 
 if not defined PORT (
-    set /p "PORT_IN=¼àÌı¶Ë¿Ú£¨Ä¬ÈÏ 8787£¬»Ø³µÌø¹ı£©£º"
+    set /p "PORT_IN=ç›‘å¬ç«¯å£ï¼ˆé»˜è®¤ 8787ï¼Œå›è½¦è·³è¿‡ï¼‰ï¼š"
     if "!PORT_IN!"==" " set "PORT_IN="
     if "!PORT_IN!"=="" set "PORT_IN=8787"
     set "PORT=!PORT_IN!"
 )
 
 if not defined BACKUP (
-    set /p "BACKUP=±¸·İ°üÂ·¾¶£¨»Ø³µÌø¹ı£©£º"
+    set /p "BACKUP=å¤‡ä»½åŒ…è·¯å¾„ï¼ˆå›è½¦è·³è¿‡ï¼‰ï¼š"
     if "!BACKUP!"==" " set "BACKUP="
 )
 
-rem ---- Node.js£¨ÈçÈ±ÔòÓÃ winget ×° Node LTS£©----
+rem ---- Node.jsï¼ˆå¦‚ç¼ºåˆ™ç”¨ winget è£… Node LTSï¼‰----
 where node >nul 2>nul && goto :node_ready
-echo [deploy] Î´¼ì²âµ½ Node.js£¬³¢ÊÔÍ¨¹ı winget °²×° Node 22 LTS ...
+echo [deploy] æœªæ£€æµ‹åˆ° Node.jsï¼Œå°è¯•é€šè¿‡ winget å®‰è£… Node 22 LTS ...
 where winget >nul 2>nul && (
     winget install --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
     if errorlevel 1 (
-        echo [deploy] winget °²×°Ê§°Ü£¬ÇëÊÖ¶¯°²×° Node.js 22+ ºóÖØÊÔ£ºhttps://nodejs.org/
+        echo [deploy] winget å®‰è£…å¤±è´¥ï¼Œè¯·æ‰‹åŠ¨å®‰è£… Node.js 22+ åé‡è¯•ï¼šhttps://nodejs.org/
         if not defined DEPLOY_BATCH pause
         exit /b 1
     )
 ) || (
-    echo [deploy] ÕÒ²»µ½ winget£¬ÇëÊÖ¶¯°²×° Node.js 22+ ºóÖØÊÔ£ºhttps://nodejs.org/
+    echo [deploy] æ‰¾ä¸åˆ° wingetï¼Œè¯·æ‰‹åŠ¨å®‰è£… Node.js 22+ åé‡è¯•ï¼šhttps://nodejs.org/
     if not defined DEPLOY_BATCH pause
     exit /b 1
 )
-rem winget ×°ÍêÍ¨³£ĞèÒªË¢ĞÂ PATH
+rem winget è£…å®Œé€šå¸¸éœ€è¦åˆ·æ–° PATH
 set "PATH=%ProgramFiles%\nodejs;%PATH%"
 
 :node_ready
 where node >nul 2>nul || (
-    echo [deploy] ÈÔÎ´ÕÒµ½ node£¬ÇëÖØÆô cmd ºóÖØÊÔ¡£
+    echo [deploy] ä»æœªæ‰¾åˆ° nodeï¼Œè¯·é‡å¯ cmd åé‡è¯•ã€‚
     if not defined DEPLOY_BATCH pause
     exit /b 1
 )
 
-rem ---- ¿ËÂ¡»òÀ­È¡ ----
+rem ---- å…‹éš†æˆ–æ‹‰å– ----
 if exist "!INSTALL_DIR!\.git" goto :do_pull
 
 dir /b "!INSTALL_DIR!\*.*" 2>nul | findstr . >nul && (
-    echo [deploy] !INSTALL_DIR! ÒÑÓĞ·Ç git ÄÚÈİ£¬ÖÕÖ¹¡£ÇëÊ¹ÓÃ¿ÕÄ¿Â¼¡£
+    echo [deploy] !INSTALL_DIR! å·²æœ‰é git å†…å®¹ï¼Œç»ˆæ­¢ã€‚è¯·ä½¿ç”¨ç©ºç›®å½•ã€‚
     if not defined DEPLOY_BATCH pause
     exit /b 1
 )
 git clone https://github.com/Yinwii/EdgeSSH.git "!INSTALL_DIR!" || (
-    echo [deploy] git clone Ê§°Ü¡£
+    echo [deploy] git clone å¤±è´¥ã€‚
     if not defined DEPLOY_BATCH pause
     exit /b 1
 )
@@ -84,51 +84,69 @@ goto :after_git
 
 :do_pull
 git -C "!INSTALL_DIR!" pull --ff-only || (
-    echo [deploy] git pull Ê§°Ü¡£
+    echo [deploy] git pull å¤±è´¥ã€‚
     if not defined DEPLOY_BATCH pause
     exit /b 1
 )
 
 :after_git
 
-rem ---- »¹Ô­±¸·İ£¨ÈçÖ¸¶¨£©----
+rem ---- è¿˜åŸå¤‡ä»½ï¼ˆå¦‚æŒ‡å®šï¼‰----
+rem   tarball ç”± migrate-to-windows.cmd ç”Ÿæˆï¼Œé‡Œé¢å¯èƒ½æœ‰ï¼š
+rem     .env                        é…ç½®
+rem     server\data\ENCRYPTION_KEY  AES-GCM å¯†é’¥
+rem     server\data\state\          D1 æ•°æ®åº“ï¼ˆå«åŠ å¯†çš„ä¸»æœºè®°å½• + å¯†ç  + ç§é’¥ï¼‰
+rem   è¦†ç›–åˆ° !INSTALL_DIR! æ—¶è·¯å¾„è‡ªåŠ¨å¯¹é½ã€‚
 if "!BACKUP!"=="" goto :do_env
 if not exist "!BACKUP!" (
-    echo [deploy] ±¸·İ²»´æÔÚ: !BACKUP!
+    echo [deploy] å¤‡ä»½ä¸å­˜åœ¨: !BACKUP!
     if not defined DEPLOY_BATCH pause
     exit /b 1
+)
+echo [deploy] è¿˜åŸå¤‡ä»½: !BACKUP!
+echo [deploy]   å†…å®¹æ¸…å•:
+for /f "usebackq delims=" %%f in (`tar -tzf "!BACKUP!" 2^>nul`) do echo     %%f
+if exist "!INSTALL_DIR!\server\data\ENCRYPTION_KEY" (
+    for /f "usebackq delims=" %%k in (`tar -tzf "!BACKUP!" 2^>nul ^| findstr /x "server\data\ENCRYPTION_KEY"`) do (
+        if not "%%k" == "" (
+            for /f "usebackq delims=" %%t in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set "STAMP=%%t"
+            copy /y "!INSTALL_DIR!\server\data\ENCRYPTION_KEY" "!INSTALL_DIR!\server\data\ENCRYPTION_KEY.old-!STAMP!" >nul
+            echo [deploy] å·²å¤‡ä»½è¿œç«¯æ—§ ENCRYPTION_KEY -^> ENCRYPTION_KEY.old-!STAMP!ï¼ˆé˜²æ­¢æ–° key è¦†ç›–åä¸¢æ•°æ®ï¼‰
+        )
+    )
 )
 tar -xzf "!BACKUP!" -C "!INSTALL_DIR!" || (
-    echo [deploy] »¹Ô­±¸·İÊ§°Ü¡£
+    echo [deploy] è¿˜åŸå¤‡ä»½å¤±è´¥ã€‚
     if not defined DEPLOY_BATCH pause
     exit /b 1
 )
+echo [deploy] è¿˜åŸå®Œæˆ
 
-rem ---- .env ³õÊ¼»¯£¨Ê×´Î²¿ÊğÊ±´ÓÄ£°å¸´ÖÆ£¬°´ PORT ¸ÄĞ´£©----
+rem ---- .env åˆå§‹åŒ–ï¼ˆé¦–æ¬¡éƒ¨ç½²æ—¶ä»æ¨¡æ¿å¤åˆ¶ï¼ŒæŒ‰ PORT æ”¹å†™ï¼‰----
 :do_env
 if not exist "!INSTALL_DIR!\.env" if exist "!INSTALL_DIR!\server\.env.example" (
-    echo [deploy] Î´¼ì²âµ½ .env£¬´Ó server\.env.example ³õÊ¼»¯£¨PORT=!PORT!£©
+    echo [deploy] æœªæ£€æµ‹åˆ° .envï¼Œä» server\.env.example åˆå§‹åŒ–ï¼ˆPORT=!PORT!ï¼‰
     powershell -NoProfile -Command "(Get-Content '!INSTALL_DIR!\server\.env.example') -replace '^PORT=.*','PORT=!PORT!' | Set-Content '!INSTALL_DIR!\.env'" || (
-        echo [deploy] .env ³õÊ¼»¯Ê§°Ü£¬ÇëÊÖ¶¯¸´ÖÆ server\.env.example µ½ .env
+        echo [deploy] .env åˆå§‹åŒ–å¤±è´¥ï¼Œè¯·æ‰‹åŠ¨å¤åˆ¶ server\.env.example åˆ° .env
     )
-    echo [deploy] ÆäËûÅäÖÃ£¨GitHub OAuth / APP_ORIGIN µÈ£©£º±à¼­ !INSTALL_DIR!\.env
+    echo [deploy] å…¶ä»–é…ç½®ï¼ˆGitHub OAuth / APP_ORIGIN ç­‰ï¼‰ï¼šç¼–è¾‘ !INSTALL_DIR!\.env
 )
 
-rem ---- ¶Ë¿Ú¸²¸Ç£¨Ç¨ÒÆ·½Í¨¹ı PORT_OVERRIDE ÏÔÊ½Ö¸¶¨Ê±£¬¸ÄĞ´»¹Ô­³öÀ´µÄ .env£©----
+rem ---- ç«¯å£è¦†ç›–ï¼ˆè¿ç§»æ–¹é€šè¿‡ PORT_OVERRIDE æ˜¾å¼æŒ‡å®šæ—¶ï¼Œæ”¹å†™è¿˜åŸå‡ºæ¥çš„ .envï¼‰----
 if defined PORT_OVERRIDE if exist "!INSTALL_DIR!\.env" (
     powershell -NoProfile -Command "(Get-Content '!INSTALL_DIR!\.env') | Where-Object { $_ -notmatch '^\s*PORT=' } | Set-Content '!INSTALL_DIR!\.env'; Add-Content -Path '!INSTALL_DIR!\.env' -Value 'PORT=!PORT_OVERRIDE!'"
-    echo [deploy] ÒÑ°´Ç¨ÒÆÖ¸¶¨¸²¸Ç¶Ë¿Ú£ºPORT=!PORT_OVERRIDE!
+    echo [deploy] å·²æŒ‰è¿ç§»æŒ‡å®šè¦†ç›–ç«¯å£ï¼šPORT=!PORT_OVERRIDE!
 )
 
-rem ---- Æô¶¯ ----
+rem ---- å¯åŠ¨ ----
 :do_start
 cd /d "!INSTALL_DIR!"
 call start.cmd
 
-rem ---- ÊÕÎ²ÌáÊ¾£ºÊµ¼ÊÉúĞ§¶Ë¿Ú ----
+rem ---- æ”¶å°¾æç¤ºï¼šå®é™…ç”Ÿæ•ˆç«¯å£ ----
 for /f "usebackq delims=" %%p in (`powershell -NoProfile -Command "(Select-String -Path '!INSTALL_DIR!\.env' -Pattern '^PORT=(\d+)' | ForEach-Object { $_.Matches[0].Groups[1].Value })"`) do set "FINAL_PORT=%%p"
 if not defined FINAL_PORT set "FINAL_PORT=!PORT!"
 echo --------------------------------------------------------------
-echo   ·şÎñ¶Ë¿Ú   : !FINAL_PORT!
-echo   ÈôÍâÍøÎŞ·¨·ÃÎÊ£¬Çë¼ì²é·À»ğÇ½/°²È«×éÊÇ·ñ·ÅĞĞ !FINAL_PORT! ¶Ë¿Ú
-echo     £¨Èç£ºnetsh advfirewall firewall add rule name="EdgeSSH" dir=in action=allow protocol=TCP localport=!FINAL_PORT!£©
+echo   æœåŠ¡ç«¯å£   : !FINAL_PORT!
+echo   è‹¥å¤–ç½‘æ— æ³•è®¿é—®ï¼Œè¯·æ£€æŸ¥é˜²ç«å¢™/å®‰å…¨ç»„æ˜¯å¦æ”¾è¡Œ !FINAL_PORT! ç«¯å£
+echo     ï¼ˆå¦‚ï¼šnetsh advfirewall firewall add rule name="EdgeSSH" dir=in action=allow protocol=TCP localport=!FINAL_PORT!ï¼‰

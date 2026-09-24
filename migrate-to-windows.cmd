@@ -61,7 +61,20 @@ node server\cli.mjs stop 2>nul || echo       [跳过] 本地服务未运行
 echo [migrate] 2/3 打备份 ...
 for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set "STAMP=%%i"
 set "TARBALL=edgessh-migrate-!STAMP!.tar.gz"
-tar -czf "!TARBALL!" .env server\data\ENCRYPTION_KEY server\data\state 2>nul
+rem 凭证目录：包含 .env 配置 / server/data/ENCRYPTION_KEY（AES-GCM 密钥）
+rem 与 server/data/state（D1 数据库，含加密的主机记录 + 密码 + 私钥）。
+rem 显式排除运行时文件：日志 + pid（pid 残留会让远端误判已在运行）。
+set "HAS_KEY=0"
+set "HAS_STATE=0"
+set "HAS_ENV=0"
+if exist "server\data\ENCRYPTION_KEY" set "HAS_KEY=1"
+if exist "server\data\state"        set "HAS_STATE=1"
+if exist ".env"                      set "HAS_ENV=1"
+echo       .env     [!HAS_ENV:~0,1!/1]   服务配置（PORT/GitHub OAuth/APP_ORIGIN 等）
+echo       key      [!HAS_KEY:~0,1!/1]   server\data\ENCRYPTION_KEY（AES-GCM 密钥）
+echo       state    [!HAS_STATE:~0,1!/1]   server\data\state（D1 + 主机记录 + 凭证）
+if "!HAS_KEY!"=="0" if "!HAS_STATE!"=="0" echo       [提示] 本机未启动过 EdgeSSH，无凭证可带；远端旧数据将原样保留。
+tar -czf "!TARBALL!" --exclude="*.log" --exclude="*.pid" --exclude="*.bak" .env server\data\ENCRYPTION_KEY server\data\state 2>nul
 if not exist "!TARBALL!" ( echo [migrate] 打包失败 & pause & exit /b 1 )
 echo       备份：!TARBALL!
 
