@@ -43,6 +43,24 @@ if [[ ! -f "$INSTALL_DIR/.env" && -f "$INSTALL_DIR/server/.env.example" ]]; then
   echo "[deploy] 其他配置（GitHub OAuth / APP_ORIGIN 等）：编辑 $INSTALL_DIR/.env"
 fi
 
+# 端口覆盖（迁移方通过 PORT_OVERRIDE 显式指定时，改写还原出来的 .env）
+if [[ -n "${PORT_OVERRIDE:-}" ]]; then
+  if [[ -f "$INSTALL_DIR/.env" ]]; then
+    sed -i "s/^PORT=.*/PORT=$PORT_OVERRIDE/" "$INSTALL_DIR/.env"
+    echo "[deploy] 已按迁移指定覆盖端口：PORT=$PORT_OVERRIDE"
+  fi
+fi
+
 # 启动（cli.mjs 自动 npm ci + build；会打印监听地址、访问入口）
 cd "$INSTALL_DIR"
 node server/cli.mjs start
+
+# 收尾提示：实际生效端口 + 外网访问前提
+FINAL_PORT="$(grep -s '^PORT=' "$INSTALL_DIR/.env" | head -1 | cut -d= -f2)"
+FINAL_PORT="${FINAL_PORT:-$PORT}"
+SERVER_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+echo "----------------------------------------------"
+echo "  服务端口   : $FINAL_PORT"
+[[ -n "$SERVER_IP" ]] && echo "  访问地址   : http://$SERVER_IP:$FINAL_PORT"
+echo "  若外网无法访问，请检查防火墙/云安全组是否放行 $FINAL_PORT 端口"
+echo "    （如 ufw: ufw allow $FINAL_PORT/tcp）"
