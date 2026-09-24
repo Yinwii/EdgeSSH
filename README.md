@@ -208,6 +208,8 @@ curl -fsSL https://raw.githubusercontent.com/Yinwii/EdgeSSH/main/deploy.sh | sud
 
 两个脚本做的事等同：装 Node 22 → `git clone/pull` → `node server/cli.mjs start`（自动 `npm ci` + `npm run build:server`）。后续升级用 `update.sh` / `update.cmd`。
 
+构建完成后自动 `npm prune --omit=dev` 清理构建工具（vite / typescript / wrangler 等），VPS 磁盘长期占用约 **200 MB**（构建期间峰值约 500 MB）。`update` / `restart --rebuild` 需要重建时会自动先补回构建工具再构建，无需手动干预。
+
 ### 迁移到新服务器
 
 **前提**：新机器能 ssh 进来、目标路径可写。
