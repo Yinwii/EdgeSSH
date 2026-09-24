@@ -194,9 +194,9 @@ tar xzf edgessh-backup.tar.gz -C /opt/edgessh   # -C 换成项目根目录
 node server/cli.mjs start
 ```
 
-### 首次安装（裸 Linux）
+### 首次安装
 
-新机器无数据要保留时，一行起：
+**裸 Linux**（一行起）：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Yinwii/EdgeSSH/main/deploy.sh | sudo bash -s -- /opt/edgessh
@@ -204,7 +204,9 @@ curl -fsSL https://raw.githubusercontent.com/Yinwii/EdgeSSH/main/deploy.sh | sud
 
 `-s --` 后面的 `/opt/edgessh` 是传给 `deploy.sh` 的第一个参数（安装目录）；省略则默认装到脚本所在目录。其他可选参数：第二个参数是「备份包路径」（存在则自动还原 `.env` / `ENCRYPTION_KEY` / `state/`）。
 
-脚本做的事：装 Node 22（如缺）→ `git clone` → `node server/cli.mjs start`（自动 `npm ci` + `npm run build:server`）。后续升级用 `update.sh`。
+**全新 Windows**（Windows 10 1809+ 自带 `scp`/`ssh`/`tar` 和 `winget`）：先 `git clone https://github.com/Yinwii/EdgeSSH.git` 到目标目录（或拷贝现有目录），然后在该目录双击 `deploy.cmd`。它做的事：装 Node 22（如缺则调 winget）→ `git pull` 或确认目录 → 还原备份（如指定）→ `start.cmd`。
+
+两个脚本做的事等同：装 Node 22 → `git clone/pull` → `node server/cli.mjs start`（自动 `npm ci` + `npm run build:server`）。后续升级用 `update.sh` / `update.cmd`。
 
 ### 迁移到新服务器
 
@@ -229,6 +231,8 @@ migrate.cmd user@hostname [--path /opt/edgessh]
 ```
 
 它做的事：停服 → 打备份 → 远程 git clone → 上传 `deploy.sh` + 备份 → 远程执行 `deploy.sh`（自动装 Node → 还原备份 → 启动）。
+
+Windows → Windows（同上）：`migrate-to-windows.cmd user@hostname [--path C:\edgessh]`；流程同上，但远程装的是 `deploy.cmd`（用 winget 装 Node）。
 
 ### 升级
 
