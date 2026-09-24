@@ -194,6 +194,8 @@ tar czf edgessh-backup.tar.gz .env server/data/ENCRYPTION_KEY server/data/state
 curl -fsSL https://raw.githubusercontent.com/Yinwii/EdgeSSH/main/deploy.sh | sudo bash -s -- /opt/edgessh
 ```
 
+`-s --` 后面的 `/opt/edgessh` 是传给 `deploy.sh` 的第一个参数（安装目录）；省略则默认装到脚本所在目录。其他可选参数：第二个参数是「备份包路径」（存在则自动还原 `.env` / `ENCRYPTION_KEY` / `state/`）。
+
 脚本做的事：装 Node 22（如缺）→ `git clone` → `node server/cli.mjs start`（自动 `npm ci` + `npm run build:server`）。后续升级用 `update.sh`。
 
 ### 迁移到新服务器
