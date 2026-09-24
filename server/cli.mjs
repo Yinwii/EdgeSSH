@@ -161,7 +161,12 @@ function startService() {
   console.log(`  日志     : ${logFile}`);
   console.log('  停止     : node server/cli.mjs stop');
   console.log('----------------------------------------------');
-  const banner = tailLog(12).filter((line) => line.includes('EdgeSSH') || line.includes('提示'));
+  // 把 serve.mjs 启动横幅里所有非分隔行原样回显（含「访问入口 / 监听地址」等关键信息）。
+  // 此前只过滤「EdgeSSH」/「提示」，把 URL 和端口行漏掉了，用户看不到入口。
+  const banner = tailLog(24).filter((line) => {
+    const trimmed = line.trim();
+    return trimmed && trimmed !== '----------------------------------------------';
+  });
   for (const line of banner) console.log(`  ${line.trim()}`);
 }
 

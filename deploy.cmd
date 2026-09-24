@@ -5,19 +5,28 @@ rem
 rem 用法（双击或直接运行即可）：
 rem   deploy.cmd
 rem
-rem 启动后按提示输入安装目录和（可选）备份包路径
+rem 启动后按提示输入安装目录、端口（默认 8787）、（可选）备份包路径
+rem 也可通过环境变量预设：set PORT=9000 && deploy.cmd
 rem 前置：Windows 10 1809+（自带 OpenSSH 客户端 + winget）
 setlocal EnableDelayedExpansion
 
 set "SCRIPT_DIR=%~dp0"
 set "INSTALL_DIR="
 set "BACKUP="
+set "PORT="
 
-rem ---- 交互式询问安装目录 ----
+if defined PORT (set "PORT_IN=!PORT!") else (set "PORT_IN=")
+
+rem ---- 交互式询问 ----
 rem 注意：set /p 在空输入时会写入单个空格，需手动清掉。
 set /p "INSTALL_DIR=安装目录（回车 = 脚本所在目录 !SCRIPT_DIR!）："
 if "!INSTALL_DIR!"==" " set "INSTALL_DIR="
 if "!INSTALL_DIR!"=="" set "INSTALL_DIR=!SCRIPT_DIR!"
+
+set /p "PORT_IN=监听端口（默认 8787，回车跳过）："
+if "!PORT_IN!"==" " set "PORT_IN="
+if "!PORT_IN!"=="" set "PORT_IN=8787"
+set "PORT=!PORT_IN!"
 
 set /p "BACKUP=备份包路径（回车跳过）："
 if "!BACKUP!"==" " set "BACKUP="
@@ -40,7 +49,7 @@ where winget >nul 2>nul && (
 rem winget 装完通常需要刷新 PATH
 set "PATH=%ProgramFiles%\nodejs;%PATH%"
 
-:node_ready
+::node_ready
 where node >nul 2>nul || (
     echo [deploy] 仍未找到 node，请重启 cmd 后重试。
     pause
@@ -62,17 +71,17 @@ git clone https://github.com/Yinwii/EdgeSSH.git "!INSTALL_DIR!" || (
 )
 goto :after_git
 
-:do_pull
+::do_pull
 git -C "!INSTALL_DIR!" pull --ff-only || (
     echo [deploy] git pull 失败。
     pause
     exit /b 1
 )
 
-:after_git
+::after_git
 
 rem ---- 还原备份（如指定）----
-if "!BACKUP!"=="" goto :do_start
+if "!BACKUP!"=="" goto :do_env
 if not exist "!BACKUP!" (
     echo [deploy] 备份不存在: !BACKUP!
     pause
@@ -84,7 +93,17 @@ tar -xzf "!BACKUP!" -C "!INSTALL_DIR!" || (
     exit /b 1
 )
 
+rem ---- .env 初始化（首次部署时从模板复制，按 PORT 改写）----
+::do_env
+if not exist "!INSTALL_DIR!\.env" if exist "!INSTALL_DIR!\server\.env.example" (
+    echo [deploy] 未检测到 .env，从 server\.env.example 初始化（PORT=!PORT!）
+    powershell -NoProfile -Command "(Get-Content '!INSTALL_DIR!\server\.env.example') -replace '^PORT=.*','PORT=!PORT!' | Set-Content '!INSTALL_DIR!\.env'" || (
+        echo [deploy] .env 初始化失败，请手动复制 server\.env.example 到 .env
+    )
+    echo [deploy] 其他配置（GitHub OAuth / APP_ORIGIN 等）：编辑 !INSTALL_DIR!\.env
+)
+
 rem ---- 启动 ----
-:do_start
+::do_start
 cd /d "!INSTALL_DIR!"
 call start.cmd

@@ -15,6 +15,7 @@ import { join, resolve, dirname, extname, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes, createHash } from 'node:crypto';
 import { Readable } from 'node:stream';
+import { networkInterfaces } from 'node:os';
 import { Miniflare } from 'miniflare';
 import { WebSocketServer, WebSocket as NodeWebSocket } from 'ws';
 
@@ -390,7 +391,24 @@ async function handleRequest(req, res) {
 // 启动
 // ---------------------------------------------------------------------------
 function printStartup(protocol) {
-  const display = config.appOrigin || `${protocol}://${config.host === '0.0.0.0' ? 'localhost' : config.host}:${config.port}`;
+  // 监听 0.0.0.0/:: 时，列出所有可访问 URL（localhost + 各非 loopback IPv4），
+  // 避免只显示 localhost 导致用户从外网不知道入口。
+  let display;
+  if (config.appOrigin) {
+    display = config.appOrigin;
+  } else if (config.host === '0.0.0.0' || config.host === '::') {
+    const urls = [`${protocol}://localhost:${config.port}`];
+    for (const addrs of Object.values(networkInterfaces())) {
+      for (const addr of addrs || []) {
+        if (addr.family === 'IPv4' && !addr.internal) {
+          urls.push(`${protocol}://${addr.address}:${config.port}`);
+        }
+      }
+    }
+    display = urls.join('  |  ');
+  } else {
+    display = `${protocol}://${config.host}:${config.port}`;
+  }
   console.log('----------------------------------------------');
   console.log(`  EdgeSSH 自托管模式已启动 (${protocol})`);
   console.log(`  监听地址   : ${config.host}:${config.port}`);

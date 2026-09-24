@@ -7,11 +7,13 @@
 #   ./deploy.sh                                   # 部署到脚本所在目录
 #   ./deploy.sh /opt/edgessh                      # 部署到指定目录
 #   ./deploy.sh /opt/edgessh /tmp/backup.tar.gz   # 部署 + 还原旧数据
+#   PORT=9000 ./deploy.sh /opt/edgessh            # 自定义端口（默认 8787）
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="${1:-$SCRIPT_DIR}"
 REPO="${REPO:-https://github.com/Yinwii/EdgeSSH.git}"
 BACKUP="${2:-}"
+PORT="${PORT:-8787}"
 
 # Node.js 22（如缺自动装，apt + NodeSource）
 if ! command -v node >/dev/null 2>&1 || [[ "$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1)" -lt 22 ]]; then
@@ -33,6 +35,14 @@ fi
 # 还原备份（可选）
 [[ -n "$BACKUP" && -f "$BACKUP" ]] && tar -xzf "$BACKUP" -C "$INSTALL_DIR"
 
-# 启动（cli.mjs 自动 npm ci + build）
+# .env 初始化（首次部署且用户已通过 PORT 环境变量指定端口时生效；
+# 模板默认 PORT=8787，sed 只改这一行，其余配置（GitHub OAuth、APP_ORIGIN 等）保留为模板注释）。
+if [[ ! -f "$INSTALL_DIR/.env" && -f "$INSTALL_DIR/server/.env.example" ]]; then
+  echo "[deploy] 未检测到 .env，从 server/.env.example 初始化（PORT=$PORT）"
+  sed "s/^PORT=.*/PORT=$PORT/" "$INSTALL_DIR/server/.env.example" > "$INSTALL_DIR/.env"
+  echo "[deploy] 其他配置（GitHub OAuth / APP_ORIGIN 等）：编辑 $INSTALL_DIR/.env"
+fi
+
+# 启动（cli.mjs 自动 npm ci + build；会打印监听地址、访问入口）
 cd "$INSTALL_DIR"
 node server/cli.mjs start
