@@ -2,18 +2,25 @@ chcp 936 >nul 2>&1
 @echo off
 rem EdgeSSH 一键部署（Windows）：装 Node 22（如缺）→ 克隆/拉取最新代码 → 还原备份（如指定）→ 启动
 rem
-rem 用法：
-rem   deploy.cmd                                              部署到脚本所在目录
-rem   deploy.cmd C:\opt\edgessh                               部署到指定目录
-rem   deploy.cmd C:\opt\edgessh C:\backup\edgessh.tar.gz      部署 + 还原旧数据
+rem 用法（双击或直接运行即可）：
+rem   deploy.cmd
 rem
+rem 启动后按提示输入安装目录和（可选）备份包路径
 rem 前置：Windows 10 1809+（自带 OpenSSH 客户端 + winget）
 setlocal EnableDelayedExpansion
 
 set "SCRIPT_DIR=%~dp0"
-set "INSTALL_DIR=%~1"
-set "BACKUP=%~2"
+set "INSTALL_DIR="
+set "BACKUP="
+
+rem ---- 交互式询问安装目录 ----
+rem 注意：set /p 在空输入时会写入单个空格，需手动清掉。
+set /p "INSTALL_DIR=安装目录（回车 = 脚本所在目录 !SCRIPT_DIR!）："
+if "!INSTALL_DIR!"==" " set "INSTALL_DIR="
 if "!INSTALL_DIR!"=="" set "INSTALL_DIR=!SCRIPT_DIR!"
+
+set /p "BACKUP=备份包路径（回车跳过）："
+if "!BACKUP!"==" " set "BACKUP="
 
 rem ---- Node.js（如缺则用 winget 装 Node LTS）----
 where node >nul 2>nul && goto :node_ready
