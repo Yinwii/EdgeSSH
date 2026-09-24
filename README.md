@@ -238,6 +238,22 @@ migrate.cmd user@hostname [--path /opt/edgessh]
 
 Windows → Windows（同上）：`migrate-to-windows.cmd user@hostname [--path C:\edgessh]`；流程同上，但远程装的是 `deploy.cmd`（用 winget 装 Node）。
 
+#### 迁移脚本做了什么 / 没做什么
+
+`migrate.cmd` 和 `migrate-to-windows.cmd` 在打包前会打印 3 行清单（`0/1` 表示本机有没有该项）：
+
+```text
+      .env     1/1   服务配置（PORT/GitHub OAuth/APP_ORIGIN 等）
+      key      1/1   server\data\ENCRYPTION_KEY（AES-GCM 密钥）
+      state    1/1   server\data\state（D1 + 主机记录 + 凭证）
+```
+
+- 备份 tar **自动排除** `*.log`、`*.pid`、`*.bak`——本机残留的 pid 不会跑到远端把新服务挡住。
+- 远端 `deploy.sh` / `deploy.cmd` 在还原前会列出 tarball 内容；如发现 `server/data/ENCRYPTION_KEY` 且远端已存在同名文件，**先把远端的旧 key 复制为 `ENCRYPTION_KEY.old-<时间戳>`** 再覆盖，永远留一份可回滚的底。
+- 如果本机**两项凭证都缺失**（还没在本机跑过 EdgeSSH），脚本会显式提示；远端现有数据**不会被改动**。
+
+整个迁移只建 1 条 ssh 连接，密码只输 1 次（Windows 自带 OpenSSH 不支持 ControlMaster 复用，旧版本因此报 `getsockname failed: Not a socket`，已移除）。
+
 ## 反向代理与 TLS（推荐）
 
 `serve.mjs` 默认监听 `0.0.0.0`，但 HTTP 模式下 Cookie 带 `__Host-`/`Secure` 标记——浏览器只接受 HTTPS，否则**登录不上**。生产环境务必通过反代 + 域名 + 证书接入。
