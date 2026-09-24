@@ -1,4 +1,4 @@
-> **本项目基于 [Worker Web SSH（CF-Workers-WebSSH）](https://github.com/cmliu/CF-Workers-WebSSH) 深度开发。**<br>
+﻿> **本项目基于 [Worker Web SSH（CF-Workers-WebSSH）](https://github.com/cmliu/CF-Workers-WebSSH) 深度开发。**<br>
 > 在上游原生 WebSSH 能力的基础上，扩展主机管理、加密云端存储、地球可视化与操作系统识别，打造面向个人管理员的云端 SSH 工作台。感谢原作者的开源贡献。
 
 <div align="center">
@@ -238,7 +238,85 @@ migrate.cmd user@hostname [--path /opt/edgessh]
 
 Windows → Windows（同上）：`migrate-to-windows.cmd user@hostname [--path C:\edgessh]`；流程同上，但远程装的是 `deploy.cmd`（用 winget 装 Node）。
 
-### 升级
+## 反向代理与 TLS（推荐）
+
+`serve.mjs` 默认监听 `0.0.0.0`，但 HTTP 模式下 Cookie 带 `__Host-`/`Secure` 标记——浏览器只接受 HTTPS，否则**登录不上**。生产环境务必通过反代 + 域名 + 证书接入。
+
+### 必须设置 APP_ORIGIN
+
+`.env` 里必须告诉 EdgeSSH 它真实对外的 URL，否则会触发 `ERR_TOO_MANY_REDIRECTS` 死循环：
+
+```bash
+APP_ORIGIN=https://edgessh.example.com
+```
+
+这个值是 Cookie Domain、OAuth 回调、CORS 白名单、反代后重定向的"权威外部 URL"——反代场景下**不是可选优化，是正确运行的前提**。
+
+### Caddy（最快，有域名时首选）
+
+```caddy
+edgessh.example.com {
+    reverse_proxy 127.0.0.1:48787
+}
+```
+
+Caddy 自动申请 Let's Encrypt 证书。如果 Caddy 与 EdgeSSH **不在同一机器**，把 `127.0.0.1` 改成 EdgeSSH 的实际 IP（如 `152.53.86.5`），并确保 EdgeSSH 服务器防火墙放行 48787。
+
+### Nginx Proxy Manager（跨机反代）
+
+| 字段 | 值 |
+|---|---|
+| Domain Names | 你的域名 |
+| Scheme | http |
+| Forward Hostname / IP | EdgeSSH 实际 IP（**不要**用 127.0.0.1，跨机无效） |
+| Forward Port | `48787`（或你自定义的端口） |
+| Websockets Support | **ON** |
+| SSL → Request a new SSL Certificate | ✅ |
+| Force SSL / HTTP/2 | ON |
+
+DNS 域名必须指向 **NPM 服务器的公网 IP**，不是 EdgeSSH 的 IP。EdgeSSH 端防火墙建议白名单 NPM IP：
+
+```bash
+iptables -I INPUT -p tcp --dport 48787 -j ACCEPT
+iptables -I INPUT -p tcp --dport 48787 ! -s <NPM-公网IP> -j DROP
+iptables-save > /etc/iptables/rules.v4
+```
+
+### 自签证书（无域名，IP 直连）
+
+在 EdgeSSH 服务器：
+
+```bash
+cd /root/data/docker/EdgeSSH
+openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+  -keyout server/data/selfsigned.key \
+  -out server/data/selfsigned.crt \
+  -subj "/CN=152.53.86.5"     # 换成你的公网 IP 或域名
+
+printf '\n# TLS 自签证书\n' >> .env
+printf 'TLS_CERT="'; cat server/data/selfsigned.crt; printf '"\n' >> .env
+printf 'TLS_KEY="'; cat server/data/selfsigned.key; printf '"\n' >> .env
+
+node server/cli.mjs restart
+```
+
+浏览器访问 `https://<IP>:<PORT>` → 证书警告选"高级 → 继续前往" → 一次性使用通过，不影响功能。
+
+## 忘记管理员密码？
+
+明文密码只在用户脑子里（`.env` 只存 PBKDF2 哈希）。重置：
+
+```bash
+npm run hash-password
+```
+
+会交互式让你输入新密码两次，输出 `pbkdf2-sha256$210000$<salt>$<hash>` 格式哈希。复制到 `.env`：
+
+```bash
+sed -i '/^ADMIN_PASSWORD_HASH=/d' .env
+echo 'ADMIN_PASSWORD_HASH=<上面那行>' >> .env
+node server/cli.mjs restart
+```### 升级
 
 ```bash
 update.sh          # Linux / macOS
