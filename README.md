@@ -168,6 +168,65 @@ Fork 启用 Actions 后，`Force Update` 每小时检查一次官方 `aozorae/Ed
 
 完整权限、自动更新、旧版迁移及 GitHub 登录扩展说明见[部署指南](DEPLOYMENT.md)；手工维护见 [Zero Trust 指南](docs/ZERO_TRUST.md)。
 
+## 备份、迁移与升级
+
+> 本节只针对 **自托管模式**。部署到 Cloudflare Workers 时数据与密钥由 Cloudflare / Worker Secrets 管理，无需自行备份。
+
+### 数据备份
+
+只备份这 3 项（重建不了，丢了就完蛋）：
+
+| 路径 | 作用 |
+| --- | --- |
+| `.env`（项目根目录） | 管理员密码哈希、`TLS_*`、`GITHUB_*` 等 |
+| `server/data/ENCRYPTION_KEY` | 32 字节 Base64，AES-GCM 加密所有 SSH 主机凭据 |
+| `server/data/state/` | Miniflare 持久化目录（D1 SQLite + Durable Object），即真正的数据库 |
+
+```bash
+tar czf edgessh-backup.tar.gz .env server/data/ENCRYPTION_KEY server/data/state
+```
+
+### 迁移到新服务器
+
+**前提**：新机器能 ssh 进来、目标路径可写。
+
+```bash
+# 旧机器
+node server/cli.mjs stop
+tar czf edgessh-backup.tar.gz .env server/data/ENCRYPTION_KEY server/data/state
+scp edgessh-backup.tar.gz user@new:/opt/edgessh/
+
+# 新机器
+cd /opt/edgessh
+tar xzf edgessh-backup.tar.gz
+node server/cli.mjs start    # 自动 npm ci + build + 跑未跑的 migrations
+```
+
+从当前 Windows 一键搬到新 Linux（Windows 10 1809+ 自带 `scp`/`ssh`/`tar`）：
+
+```cmd
+migrate.cmd user@hostname [--path /opt/edgessh]
+```
+
+它做的事：停服 → 打备份 → 远程 git clone → 上传 `deploy.sh` + 备份 → 远程执行 `deploy.sh`（自动装 Node → 还原备份 → 启动）。
+
+### 升级
+
+```bash
+update.sh          # Linux / macOS
+update.cmd         # Windows
+# 或任一平台：
+node server/cli.mjs update
+```
+
+等价于 `git pull --ff-only && npm ci && npm run build:server && cli.mjs restart`，**任意一步失败立即中止，不重启现有服务**——升级失败 ≠ 服务挂掉。`migrations/` 下的 SQL 文件会在启动时按文件名顺序自动追跑，已跑过的跳过。
+
+### 注意事项
+
+- 不要手动删改 `server/data/state/`（数据库）。
+- 不要改 `ENCRYPTION_KEY`（改了所有保存的主机凭据永久读不出来）。
+- `wrangler.toml` 改了 D1 binding 名 / Durable Object 类名是破坏性变更，旧数据读不到，需走导出 / 导入脚本（仓库暂未提供）。
+
 ## 本地开发
 
 安装依赖并准备本地变量：
