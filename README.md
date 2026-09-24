@@ -186,6 +186,16 @@ Fork 启用 Actions 后，`Force Update` 每小时检查一次官方 `aozorae/Ed
 tar czf edgessh-backup.tar.gz .env server/data/ENCRYPTION_KEY server/data/state
 ```
 
+### 首次安装（裸 Linux）
+
+新机器无数据要保留时，一行起：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Yinwii/EdgeSSH/main/deploy.sh | sudo bash -s -- /opt/edgessh
+```
+
+脚本做的事：装 Node 22（如缺）→ `git clone` → `node server/cli.mjs start`（自动 `npm ci` + `npm run build:server`）。后续升级用 `update.sh`。
+
 ### 迁移到新服务器
 
 **前提**：新机器能 ssh 进来、目标路径可写。
