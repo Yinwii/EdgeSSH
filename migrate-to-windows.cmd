@@ -37,8 +37,10 @@ where ssh >nul 2>&1 || (echo [migrate] 找不到 ssh & pause & exit /b 1)
 where tar >nul 2>&1 || (echo [migrate] 找不到 tar & pause & exit /b 1)
 
 rem ---- SSH ControlMaster：一次密码, 所有 ssh/scp 共享同一认证会话 ----
+rem 8.3 短路径避免 USERPROFILE 里的空格被 SSH 错误地截断 ControlPath 值。
 if not exist "%USERPROFILE%\.ssh" mkdir "%USERPROFILE%\.ssh" >nul 2>&1
-set "CM_PATH=%USERPROFILE%\.ssh\edgessh-cm-%%r@%%h-%%p"
+for %%i in ("%USERPROFILE%\.ssh") do set "CM_DIR_SHORT=%%~si"
+set "CM_PATH=!CM_DIR_SHORT!\edgessh-cm-%%r@%%h-%%p"
 
 echo.
 echo [migrate] 远程 : !REMOTE!:!REMOTE_PATH!

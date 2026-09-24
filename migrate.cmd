@@ -38,9 +38,14 @@ where ssh >nul 2>&1 || (echo [migrate] 找不到 ssh & pause & exit /b 1)
 where tar >nul 2>&1 || (echo [migrate] 找不到 tar & pause & exit /b 1)
 
 rem ---- SSH ControlMaster：一次密码, 所有 ssh/scp 共享同一认证会话 ----
-rem %%r %%h %%p 会被 ssh 自身在运行时替换为用户名/主机/端口
+rem 8.3 短路径避免 USERPROFILE 里的空格被 SSH 错误地截断 ControlPath 值。
+rem OpenSSH 解析 -o value 时按空白字符截断（与配置文件解析同源），CMD 已脱掉
+rem 我们加的外层引号，所以含空格的路径（如"C:\Users\Wii Yin\.ssh"）会让 SSH
+rem 报 "keyword controlpath extra arguments at end of line"。用短路径
+rem "C:\Users\WIIYIN~1\SSH~1"绕过；%%r %%h %%p 是 ssh 自身在运行时的占位符。
 if not exist "%USERPROFILE%\.ssh" mkdir "%USERPROFILE%\.ssh" >nul 2>&1
-set "CM_PATH=%USERPROFILE%\.ssh\edgessh-cm-%%r@%%h-%%p"
+for %%i in ("%USERPROFILE%\.ssh") do set "CM_DIR_SHORT=%%~si"
+set "CM_PATH=!CM_DIR_SHORT!\edgessh-cm-%%r@%%h-%%p"
 
 echo.
 echo [migrate] 远程 : !REMOTE!:!REMOTE_PATH!
