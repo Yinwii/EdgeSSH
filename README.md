@@ -186,6 +186,14 @@ Fork 启用 Actions 后，`Force Update` 每小时检查一次官方 `aozorae/Ed
 tar czf edgessh-backup.tar.gz .env server/data/ENCRYPTION_KEY server/data/state
 ```
 
+恢复（必须 3 项齐全，否则起不来或解不开主机凭据）：
+
+```bash
+node server/cli.mjs stop
+tar xzf edgessh-backup.tar.gz -C /opt/edgessh   # -C 换成项目根目录
+node server/cli.mjs start
+```
+
 ### 首次安装（裸 Linux）
 
 新机器无数据要保留时，一行起：
