@@ -1,12 +1,13 @@
+chcp 936 >nul 2>&1
 @echo off
-rem EdgeSSH ä¸€é”®è¿ç§»ï¼šå½“å‰ Windows â†’ è¿œç¨‹ Windows
-rem æµç¨‹ï¼šåœæœ â†’ æ‰“å¤‡ä»½ â†’ è¿œç¨‹ git clone â†’ ä¸Šä¼  deploy.cmd + å¤‡ä»½ â†’ è¿œç¨‹ deploy
+rem EdgeSSH Ò»¼üÇ¨ÒÆ£ºµ±Ç° Windows ¡ú Ô¶³Ì Windows
+rem Á÷³Ì£ºÍ£·ş ¡ú ´ò±¸·İ ¡ú Ô¶³Ì git clone ¡ú ÉÏ´« deploy.cmd + ±¸·İ ¡ú Ô¶³Ì deploy
 rem
-rem ç”¨æ³•ï¼š
+rem ÓÃ·¨£º
 rem   migrate-to-windows.cmd user@hostname [--path C:\edgessh]
 rem
-rem å‰ç½®ï¼šWindows 10 1809+ï¼ˆè‡ªå¸¦ OpenSSH å®¢æˆ·ç«¯ï¼šscp / ssh / tarï¼‰
-rem é»˜è®¤è¿œç¨‹è·¯å¾„ C:\edgessh
+rem Ç°ÖÃ£ºWindows 10 1809+£¨×Ô´ø OpenSSH ¿Í»§¶Ë£ºscp / ssh / tar£©
+rem Ä¬ÈÏÔ¶³ÌÂ·¾¶ C:\edgessh
 setlocal EnableDelayedExpansion
 
 cd /d "%~dp0"
@@ -17,47 +18,47 @@ set "REMOTE_PATH=C:\edgessh"
 if "%~1"=="" goto :done
 if /i "%~1"=="--path" ( set "REMOTE_PATH=%~2" & shift & shift & goto :parse )
 if "!REMOTE!"=="" ( set "REMOTE=%~1" & shift & goto :parse )
-echo [migrate] æœªçŸ¥å‚æ•°ï¼š%~1 & pause & exit /b 1
+echo [migrate] Î´Öª²ÎÊı£º%~1 & pause & exit /b 1
 :done
 if "!REMOTE!"=="" (
-    echo [migrate] ç”¨æ³•ï¼šmigrate-to-windows.cmd user@hostname [--path C:\edgessh]
+    echo [migrate] ÓÃ·¨£ºmigrate-to-windows.cmd user@hostname [--path C:\edgessh]
     pause
     exit /b 1
 )
-where scp >nul 2>nul || (echo [migrate] æ‰¾ä¸åˆ° scp & pause & exit /b 1)
-where ssh >nul 2>nul || (echo [migrate] æ‰¾ä¸åˆ° ssh & pause & exit /b 1)
-where tar >nul 2>nul || (echo [migrate] æ‰¾ä¸åˆ° tar & pause & exit /b 1)
+where scp >nul 2>nul || (echo [migrate] ÕÒ²»µ½ scp & pause & exit /b 1)
+where ssh >nul 2>nul || (echo [migrate] ÕÒ²»µ½ ssh & pause & exit /b 1)
+where tar >nul 2>nul || (echo [migrate] ÕÒ²»µ½ tar & pause & exit /b 1)
 
-echo [migrate] è¿œç¨‹ : !REMOTE!:!REMOTE_PATH!
+echo [migrate] Ô¶³Ì : !REMOTE!:!REMOTE_PATH!
 echo.
 
-echo [migrate] 1/5 åœæ­¢æœ¬åœ°æœåŠ¡ ...
-call node server\cli.mjs stop || echo       è·³è¿‡
+echo [migrate] 1/5 Í£Ö¹±¾µØ·şÎñ ...
+call node server\cli.mjs stop || echo       Ìø¹ı
 
-echo [migrate] 2/5 æ‰“å¤‡ä»½ ...
+echo [migrate] 2/5 ´ò±¸·İ ...
 for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set "STAMP=%%i"
 set "TARBALL=edgessh-migrate-!STAMP!.tar.gz"
 tar -czf "!TARBALL!" .env server\data\ENCRYPTION_KEY server\data\state 2>nul
-if not exist "!TARBALL!" ( echo [migrate] æ‰“åŒ…å¤±è´¥ & pause & exit /b 1 )
+if not exist "!TARBALL!" ( echo [migrate] ´ò°üÊ§°Ü & pause & exit /b 1 )
 
-echo [migrate] 3/5 è¿œç¨‹ git clone ...
+echo [migrate] 3/5 Ô¶³Ì git clone ...
 ssh "!REMOTE!" "if not exist !REMOTE_PATH!\.git ( git clone https://github.com/Yinwii/EdgeSSH.git !REMOTE_PATH! )"
 
-echo [migrate] 4/5 ä¸Šä¼  deploy.cmd å’Œå¤‡ä»½ ...
+echo [migrate] 4/5 ÉÏ´« deploy.cmd ºÍ±¸·İ ...
 scp deploy.cmd "!REMOTE!:/tmp/deploy.cmd"
 scp "!TARBALL!" "!REMOTE!:/tmp/!TARBALL!"
 
-echo [migrate] 5/5 è¿œç¨‹ deploy ...
-echo       ï¼ˆé¦–æ¬¡ä¼šè£… Node.jsï¼Œçº¦ 1-2 åˆ†é’Ÿï¼‰
+echo [migrate] 5/5 Ô¶³Ì deploy ...
+echo       £¨Ê×´Î»á×° Node.js£¬Ô¼ 1-2 ·ÖÖÓ£©
 ssh "!REMOTE!" "/tmp/deploy.cmd !REMOTE_PATH! /tmp/!TARBALL!"
 set "REMOTE_RC=%errorlevel%"
 
 del "!TARBALL!" 2>nul
 
 if %REMOTE_RC% equ 0 (
-    echo [migrate] å®Œæˆ ^!
-    echo   çŠ¶æ€ï¼šssh !REMOTE! "cd /d !REMOTE_PATH! ^&^& call status.cmd"
+    echo [migrate] Íê³É ^!
+    echo   ×´Ì¬£ºssh !REMOTE! "cd /d !REMOTE_PATH! ^&^& call status.cmd"
 ) else (
-    echo [migrate] è¿œç¨‹å¤±è´¥ï¼Œå¤‡ä»½åœ¨è¿œç¨‹ /tmp/!TARBALL!
+    echo [migrate] Ô¶³ÌÊ§°Ü£¬±¸·İÔÚÔ¶³Ì /tmp/!TARBALL!
 )
 exit /b %REMOTE_RC%

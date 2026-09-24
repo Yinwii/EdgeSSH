@@ -1,5 +1,6 @@
+chcp 936 >nul 2>&1
 @echo off
-rem EdgeSSH ä¸€é”®åœæ­¢ï¼ˆWindowsï¼‰ï¼šåŒå‡»è¿è¡Œå³å¯ï¼Œæ ¸å¿ƒé€»è¾‘è§ server\cli.mjs
+rem EdgeSSH Ò»¼üÍ£Ö¹£¨Windows£©£ºË«»÷ÔËĞĞ¼´¿É£¬ºËĞÄÂß¼­¼û server\cli.mjs
 setlocal
 cd /d "%~dp0"
 node server\cli.mjs stop %*

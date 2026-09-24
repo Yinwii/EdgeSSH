@@ -1,5 +1,6 @@
+chcp 936 >nul 2>&1
 @echo off
-rem EdgeSSH ä¸€é”®é‡å¯ï¼ˆWindowsï¼‰ï¼šåŒå‡»è¿è¡Œå³å¯ï¼Œå¯åŠ  --rebuild å¼ºåˆ¶é‡å»º
+rem EdgeSSH Ò»¼üÖØÆô£¨Windows£©£ºË«»÷ÔËĞĞ¼´¿É£¬¿É¼Ó --rebuild Ç¿ÖÆÖØ½¨
 setlocal
 cd /d "%~dp0"
 node server\cli.mjs restart %*

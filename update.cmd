@@ -1,7 +1,8 @@
+chcp 936 >nul 2>&1
 @echo off
-rem EdgeSSH ä¸€é”®å‡çº§è„šæœ¬ï¼ˆWindowsï¼‰
-rem æµç¨‹ï¼šgit pull â†’ npm ci â†’ npm run build:server â†’ é‡å¯æœåŠ¡
-rem ä»»æ„ä¸€æ­¥å¤±è´¥ç«‹å³åœæ­¢ï¼Œä¸å½±å“ç°æœ‰æœåŠ¡çš„è¿è¡ŒçŠ¶æ€ã€‚
+rem EdgeSSH Ò»¼üÉı¼¶½Å±¾£¨Windows£©
+rem Á÷³Ì£ºgit pull ¡ú npm ci ¡ú npm run build:server ¡ú ÖØÆô·şÎñ
+rem ÈÎÒâÒ»²½Ê§°ÜÁ¢¼´Í£Ö¹£¬²»Ó°ÏìÏÖÓĞ·şÎñµÄÔËĞĞ×´Ì¬¡£
 setlocal
 
 set "SCRIPT_DIR=%~dp0"
@@ -10,7 +11,7 @@ cd /d "%SCRIPT_DIR%"
 node server\cli.mjs update
 if errorlevel 1 (
     echo.
-    echo [update.cmd] å‡çº§å¤±è´¥ï¼ŒæœåŠ¡ä¿æŒå‡çº§å‰çš„çŠ¶æ€æœªå˜ã€‚
+    echo [update.cmd] Éı¼¶Ê§°Ü£¬·şÎñ±£³ÖÉı¼¶Ç°µÄ×´Ì¬Î´±ä¡£
     exit /b 1
 )
 

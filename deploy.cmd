@@ -1,12 +1,13 @@
+chcp 936 >nul 2>&1
 @echo off
-rem EdgeSSH ä¸€é”®éƒ¨ç½²ï¼ˆWindowsï¼‰ï¼šè£… Node 22ï¼ˆå¦‚ç¼ºï¼‰â†’ å…‹éš†/æ‹‰å–æœ€æ–°ä»£ç  â†’ è¿˜åŸå¤‡ä»½ï¼ˆå¦‚æŒ‡å®šï¼‰â†’ å¯åŠ¨
+rem EdgeSSH Ò»¼ü²¿Êğ£¨Windows£©£º×° Node 22£¨ÈçÈ±£©¡ú ¿ËÂ¡/À­È¡×îĞÂ´úÂë ¡ú »¹Ô­±¸·İ£¨ÈçÖ¸¶¨£©¡ú Æô¶¯
 rem
-rem ç”¨æ³•ï¼š
-rem   deploy.cmd                                              éƒ¨ç½²åˆ°è„šæœ¬æ‰€åœ¨ç›®å½•
-rem   deploy.cmd C:\opt\edgessh                               éƒ¨ç½²åˆ°æŒ‡å®šç›®å½•
-rem   deploy.cmd C:\opt\edgessh C:\backup\edgessh.tar.gz      éƒ¨ç½² + è¿˜åŸæ—§æ•°æ®
+rem ÓÃ·¨£º
+rem   deploy.cmd                                              ²¿Êğµ½½Å±¾ËùÔÚÄ¿Â¼
+rem   deploy.cmd C:\opt\edgessh                               ²¿Êğµ½Ö¸¶¨Ä¿Â¼
+rem   deploy.cmd C:\opt\edgessh C:\backup\edgessh.tar.gz      ²¿Êğ + »¹Ô­¾ÉÊı¾İ
 rem
-rem å‰ç½®ï¼šWindows 10 1809+ï¼ˆè‡ªå¸¦ OpenSSH å®¢æˆ·ç«¯ + wingetï¼‰
+rem Ç°ÖÃ£ºWindows 10 1809+£¨×Ô´ø OpenSSH ¿Í»§¶Ë + winget£©
 setlocal EnableDelayedExpansion
 
 set "SCRIPT_DIR=%~dp0"
@@ -14,41 +15,41 @@ set "INSTALL_DIR=%~1"
 set "BACKUP=%~2"
 if "!INSTALL_DIR!"=="" set "INSTALL_DIR=!SCRIPT_DIR!"
 
-rem ---- Node.jsï¼ˆå¦‚ç¼ºåˆ™ç”¨ winget è£… Node LTSï¼‰----
+rem ---- Node.js£¨ÈçÈ±ÔòÓÃ winget ×° Node LTS£©----
 where node >nul 2>nul && goto :node_ready
-echo [deploy] æœªæ£€æµ‹åˆ° Node.jsï¼Œå°è¯•é€šè¿‡ winget å®‰è£… Node 22 LTS ...
+echo [deploy] Î´¼ì²âµ½ Node.js£¬³¢ÊÔÍ¨¹ı winget °²×° Node 22 LTS ...
 where winget >nul 2>nul && (
     winget install --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
     if errorlevel 1 (
-        echo [deploy] winget å®‰è£…å¤±è´¥ï¼Œè¯·æ‰‹åŠ¨å®‰è£… Node.js 22+ åé‡è¯•ï¼šhttps://nodejs.org/
+        echo [deploy] winget °²×°Ê§°Ü£¬ÇëÊÖ¶¯°²×° Node.js 22+ ºóÖØÊÔ£ºhttps://nodejs.org/
         pause
         exit /b 1
     )
 ) || (
-    echo [deploy] æ‰¾ä¸åˆ° wingetï¼Œè¯·æ‰‹åŠ¨å®‰è£… Node.js 22+ åé‡è¯•ï¼šhttps://nodejs.org/
+    echo [deploy] ÕÒ²»µ½ winget£¬ÇëÊÖ¶¯°²×° Node.js 22+ ºóÖØÊÔ£ºhttps://nodejs.org/
     pause
     exit /b 1
 )
-rem winget è£…å®Œé€šå¸¸éœ€è¦åˆ·æ–° PATH
+rem winget ×°ÍêÍ¨³£ĞèÒªË¢ĞÂ PATH
 set "PATH=%ProgramFiles%\nodejs;%PATH%"
 
 :node_ready
 where node >nul 2>nul || (
-    echo [deploy] ä»æœªæ‰¾åˆ° nodeï¼Œè¯·é‡å¯ cmd åé‡è¯•ã€‚
+    echo [deploy] ÈÔÎ´ÕÒµ½ node£¬ÇëÖØÆô cmd ºóÖØÊÔ¡£
     pause
     exit /b 1
 )
 
-rem ---- å…‹éš†æˆ–æ‹‰å– ----
+rem ---- ¿ËÂ¡»òÀ­È¡ ----
 if exist "!INSTALL_DIR!\.git" goto :do_pull
 
 dir /b "!INSTALL_DIR!\*.*" 2>nul | findstr . >nul && (
-    echo [deploy] !INSTALL_DIR! å·²æœ‰é git å†…å®¹ï¼Œç»ˆæ­¢ã€‚è¯·ä½¿ç”¨ç©ºç›®å½•ã€‚
+    echo [deploy] !INSTALL_DIR! ÒÑÓĞ·Ç git ÄÚÈİ£¬ÖÕÖ¹¡£ÇëÊ¹ÓÃ¿ÕÄ¿Â¼¡£
     pause
     exit /b 1
 )
 git clone https://github.com/Yinwii/EdgeSSH.git "!INSTALL_DIR!" || (
-    echo [deploy] git clone å¤±è´¥ã€‚
+    echo [deploy] git clone Ê§°Ü¡£
     pause
     exit /b 1
 )
@@ -56,27 +57,27 @@ goto :after_git
 
 :do_pull
 git -C "!INSTALL_DIR!" pull --ff-only || (
-    echo [deploy] git pull å¤±è´¥ã€‚
+    echo [deploy] git pull Ê§°Ü¡£
     pause
     exit /b 1
 )
 
 :after_git
 
-rem ---- è¿˜åŸå¤‡ä»½ï¼ˆå¦‚æŒ‡å®šï¼‰----
+rem ---- »¹Ô­±¸·İ£¨ÈçÖ¸¶¨£©----
 if "!BACKUP!"=="" goto :do_start
 if not exist "!BACKUP!" (
-    echo [deploy] å¤‡ä»½ä¸å­˜åœ¨: !BACKUP!
+    echo [deploy] ±¸·İ²»´æÔÚ: !BACKUP!
     pause
     exit /b 1
 )
 tar -xzf "!BACKUP!" -C "!INSTALL_DIR!" || (
-    echo [deploy] è¿˜åŸå¤‡ä»½å¤±è´¥ã€‚
+    echo [deploy] »¹Ô­±¸·İÊ§°Ü¡£
     pause
     exit /b 1
 )
 
-rem ---- å¯åŠ¨ ----
+rem ---- Æô¶¯ ----
 :do_start
 cd /d "!INSTALL_DIR!"
 call start.cmd

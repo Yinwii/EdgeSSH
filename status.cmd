@@ -1,5 +1,6 @@
+chcp 936 >nul 2>&1
 @echo off
-rem EdgeSSH æŸ¥çœ‹è¿è¡ŒçŠ¶æ€ä¸æœ€è¿‘æ—¥å¿—ï¼ˆWindowsï¼‰
+rem EdgeSSH ²é¿´ÔËĞĞ×´Ì¬Óë×î½üÈÕÖ¾£¨Windows£©
 setlocal
 cd /d "%~dp0"
 node server\cli.mjs log --lines 30 %*

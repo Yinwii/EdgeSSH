@@ -1,7 +1,8 @@
+chcp 936 >nul 2>&1
 @echo off
-rem EdgeSSH ä¸€é”®å¯åŠ¨ï¼ˆWindowsï¼‰ï¼šåŒå‡»è¿è¡Œå³å¯ï¼Œæ ¸å¿ƒé€»è¾‘è§ server\cli.mjs
+rem EdgeSSH Ò»¼üÆô¶¯£¨Windows£©£ºË«»÷ÔËĞĞ¼´¿É£¬ºËĞÄÂß¼­¼û server\cli.mjs
 setlocal
 cd /d "%~dp0"
-where node >nul 2>nul || (echo [EdgeSSH] æœªæ‰¾åˆ° nodeï¼Œè¯·å…ˆå®‰è£… Node.js 22.12+ https://nodejs.org/ & pause & exit /b 1)
+where node >nul 2>nul || (echo [EdgeSSH] Î´ÕÒµ½ node£¬ÇëÏÈ°²×° Node.js 22.12+ https://nodejs.org/ & pause & exit /b 1)
 node server\cli.mjs start %*
 pause
