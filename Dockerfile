@@ -5,6 +5,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY . .
 RUN npm run build:server
+# 运行镜像只带生产依赖，砍掉 vite/typescript/wrangler 等构建工具
+RUN npm prune --omit=dev --no-audit --no-fund
 
 FROM node:22-alpine
 WORKDIR /app

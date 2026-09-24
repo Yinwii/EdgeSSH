@@ -86,13 +86,36 @@ function installDeps() {
   if (!ok) die('依赖安装失败，请检查 Node.js（需 >= 22.12）与网络后重试。');
 }
 
+// prune --omit=dev 会把构建工具（vite / typescript / wrangler）一并清除，
+// 强制重建前需先补回，否则 npm run build:server 会因缺工具而失败。
+function ensureBuildDeps() {
+  if (existsSync(join(rootDir, 'node_modules', 'vite'))) return;
+  console.log('      补回构建工具（npm ci）...');
+  const lock = existsSync(join(rootDir, 'package-lock.json'));
+  const ok = lock
+    ? run('npm', ['ci', '--no-audit', '--no-fund'])
+    : run('npm', ['install', '--no-audit', '--no-fund']);
+  if (!ok) die('构建依赖安装失败，请检查网络后重试。');
+}
+
+// 构建完成后清除开发依赖，运行时只需生产依赖（miniflare / ws / jose 等），
+// 磁盘占用从约 500 MB 降到约 200 MB。
+function pruneDevDeps() {
+  console.log('      清理开发依赖（npm prune --omit=dev）...');
+  if (!run('npm', ['prune', '--omit=dev', '--no-audit', '--no-fund'])) {
+    console.warn('[EdgeSSH] [警告] prune 失败（不影响运行，仅多占磁盘）。');
+  }
+}
+
 function buildIfNeeded(force) {
   if (!force && existsSync(workerBundle) && existsSync(distIndex)) {
     console.log('[2/3] 构建产物已存在，跳过构建（可用 --rebuild 强制重建）。');
     return;
   }
+  ensureBuildDeps();
   console.log('[2/3] 构建前端与 Worker...');
   if (!run('npm', ['run', 'build:server'])) die('构建失败，请查看上方报错信息。');
+  pruneDevDeps();
 }
 
 function startService() {
@@ -185,13 +208,15 @@ function gitPull() {
 
 function updateService() {
   gitPull();
-  console.log('[2/4] 安装/同步依赖（npm ci）...');
+  console.log('[2/5] 安装/同步依赖（npm ci）...');
   if (!run('npm', ['ci', '--no-audit', '--no-fund'])) die('npm ci 失败，请检查 Node.js 版本与网络。');
-  console.log('[3/4] 重新构建（前端 + Worker）...');
+  console.log('[3/5] 重新构建（前端 + Worker）...');
   if (!run('npm', ['run', 'build:server'])) die('构建失败，请查看上方报错。');
-  console.log('[4/4] 重启服务...');
+  pruneDevDeps();
+  console.log('[4/5] 重启服务...');
   // 不论服务是否在跑都重新启动一次，保证产物和进程都更新。
   stopService();
+  console.log('[5/5] 启动新版本...');
   startService();
   console.log('[EdgeSSH] update 完成。');
 }
