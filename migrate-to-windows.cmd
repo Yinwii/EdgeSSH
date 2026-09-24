@@ -57,7 +57,7 @@ tar -czf "!TARBALL!" .env server\data\ENCRYPTION_KEY server\data\state 2>nul
 if not exist "!TARBALL!" ( echo [migrate] 打包失败 & pause & exit /b 1 )
 
 echo [migrate] 3/5 远程 git clone ...
-ssh "!REMOTE!" "if not exist !REMOTE_PATH!\.git ( git clone https://github.com/Yinwii/EdgeSSH.git !REMOTE_PATH! )"
+ssh "!REMOTE!" "test -d '!REMOTE_PATH!\\.git' || git clone https://github.com/Yinwii/EdgeSSH.git '!REMOTE_PATH!'"
 
 echo [migrate] 4/5 上传 deploy.cmd 和备份 ...
 scp deploy.cmd "!REMOTE!:/tmp/deploy.cmd"
