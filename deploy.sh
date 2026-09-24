@@ -44,10 +44,13 @@ if [[ ! -f "$INSTALL_DIR/.env" && -f "$INSTALL_DIR/server/.env.example" ]]; then
 fi
 
 # 端口覆盖（迁移方通过 PORT_OVERRIDE 显式指定时，改写还原出来的 .env）
+# 注意：还原出的 .env 里 PORT 可能是注释状态（"# PORT=8787"），sed 替换
+# 不会命中，所以这里直接删除生效的 PORT 行再追加，确保一定写入。
 if [[ -n "${PORT_OVERRIDE:-}" ]]; then
   if [[ -f "$INSTALL_DIR/.env" ]]; then
-    sed -i "s/^PORT=.*/PORT=$PORT_OVERRIDE/" "$INSTALL_DIR/.env"
-    echo "[deploy] 已按迁移指定覆盖端口：PORT=$PORT_OVERRIDE"
+    sed -i '/^[[:space:]]*PORT=/d' "$INSTALL_DIR/.env"
+    printf 'PORT=%s\n' "$PORT_OVERRIDE" >> "$INSTALL_DIR/.env"
+    echo "[deploy] 已按迁移指定写入端口：PORT=$PORT_OVERRIDE"
   fi
 fi
 

@@ -116,7 +116,7 @@ if not exist "!INSTALL_DIR!\.env" if exist "!INSTALL_DIR!\server\.env.example" (
 
 rem ---- 端口覆盖（迁移方通过 PORT_OVERRIDE 显式指定时，改写还原出来的 .env）----
 if defined PORT_OVERRIDE if exist "!INSTALL_DIR!\.env" (
-    powershell -NoProfile -Command "(Get-Content '!INSTALL_DIR!\.env') -replace '^PORT=.*','PORT=!PORT_OVERRIDE!' | Set-Content '!INSTALL_DIR!\.env'"
+    powershell -NoProfile -Command "(Get-Content '!INSTALL_DIR!\.env') | Where-Object { $_ -notmatch '^\s*PORT=' } | Set-Content '!INSTALL_DIR!\.env'; Add-Content -Path '!INSTALL_DIR!\.env' -Value 'PORT=!PORT_OVERRIDE!'"
     echo [deploy] 已按迁移指定覆盖端口：PORT=!PORT_OVERRIDE!
 )
 
