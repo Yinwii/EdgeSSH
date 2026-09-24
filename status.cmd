@@ -1,4 +1,5 @@
 chcp 936 >nul 2>&1
+title EdgeSSH :: status
 @echo off
 rem EdgeSSH 查看运行状态与最近日志（Windows）
 setlocal

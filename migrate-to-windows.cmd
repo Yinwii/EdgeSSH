@@ -1,4 +1,5 @@
 chcp 936 >nul 2>&1
+title EdgeSSH :: migrate-to-windows
 @echo off
 rem EdgeSSH 一键迁移：当前 Windows → 远程 Windows
 rem 流程：停服 → 打备份 → 远程 git clone → 上传 deploy.cmd + 备份 → 远程 deploy
@@ -27,6 +28,9 @@ if "!REMOTE!"=="" (
     if "!REMOTE!"==" " set "REMOTE="
 )
 if "!REMOTE!"=="" ( echo [migrate] 未输入远程主机，退出。 & pause & exit /b 1 )
+
+rem 拿到目标主机后更新窗口标题，方便多开时区分
+title EdgeSSH :: migrate-to-windows -^> !REMOTE!
 
 set /p "RP_INPUT=远程安装路径 [!REMOTE_PATH!]（回车跳过）："
 if "!RP_INPUT!"==" " set "RP_INPUT="

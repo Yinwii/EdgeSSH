@@ -1,4 +1,5 @@
 chcp 936 >nul 2>&1
+title EdgeSSH :: update
 @echo off
 rem EdgeSSH 一键升级脚本（Windows）
 rem 流程：git pull → npm ci → npm run build:server → 重启服务

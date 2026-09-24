@@ -1,4 +1,5 @@
 chcp 936 >nul 2>&1
+title EdgeSSH :: uninstall
 @echo off
 rem EdgeSSH Ò»¼üÐ¶ÔØ½Å±¾£¨Windows£©
 rem

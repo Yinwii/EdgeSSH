@@ -1,4 +1,5 @@
 chcp 936 >nul 2>&1
+title EdgeSSH :: deploy
 @echo off
 rem EdgeSSH 一键部署（Windows）：装 Node 22（如缺）→ 克隆/拉取最新代码 → 还原备份（如指定）→ 启动
 rem

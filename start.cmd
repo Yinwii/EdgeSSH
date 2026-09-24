@@ -1,4 +1,5 @@
 chcp 936 >nul 2>&1
+title EdgeSSH :: start
 @echo off
 rem EdgeSSH 一键启动（Windows）：双击运行即可，核心逻辑见 server\cli.mjs
 setlocal
