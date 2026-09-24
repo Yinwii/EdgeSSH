@@ -249,6 +249,18 @@ node server/cli.mjs update
 
 等价于 `git pull --ff-only && npm ci && npm run build:server && cli.mjs restart`，**任意一步失败立即中止，不重启现有服务**——升级失败 ≠ 服务挂掉。`migrations/` 下的 SQL 文件会在启动时按文件名顺序自动追跑，已跑过的跳过。
 
+### 常用命令
+
+| 操作 | Linux / macOS | Windows |
+|---|---|---|
+| 启动 | `start.sh` 或 `node server/cli.mjs start` | 双击 `start.cmd` |
+| 停止 | `stop.sh` 或 `node server/cli.mjs stop` | 双击 `stop.cmd` |
+| 重启 | `restart.sh [--rebuild]` | 双击 `restart.cmd`（`--rebuild` 强制重建） |
+| 状态 | `status.sh` | 双击 `status.cmd` |
+| 日志 | `node server/cli.mjs log [--lines N]` 或 `tail -f server/data/edgessh.log` | `node server\cli.mjs log` 或 `Get-Content server\data\edgessh.log -Wait` |
+| 升级 | `update.sh` | 双击 `update.cmd` |
+| **卸载** | `uninstall.sh`（`--keep-code` 仅清数据） | `uninstall.cmd`（`--keep-code` 仅清数据） |
+
 ### 注意事项
 
 - 不要手动删改 `server/data/state/`（数据库）。
