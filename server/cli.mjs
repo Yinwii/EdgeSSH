@@ -149,10 +149,11 @@ function startService() {
     spawnSync(isWindows ? 'ping' : 'sleep', isWindows ? ['-n', '2', '127.0.0.1'] : ['1'], { stdio: 'ignore' });
     if (!isRunning(child.pid)) {
       console.error('[EdgeSSH] 启动失败，最近日志：');
-      for (const line of tailLog(20)) console.error(`  ${line}`);
+      const failed = readFileSync(logFile).slice(logOffset).toString('utf8').split(/\r?\n/).filter(Boolean).slice(-20);
+      for (const line of failed) console.error(`  ${line}`);
       process.exit(1);
     }
-    if (readFileSync(logFile, 'utf8').slice(logOffset).includes('自托管模式已启动')) break;
+    if (readFileSync(logFile).slice(logOffset).toString('utf8').includes('自托管模式已启动')) break;
   }
 
   console.log('----------------------------------------------');
@@ -161,9 +162,10 @@ function startService() {
   console.log(`  日志     : ${logFile}`);
   console.log('  停止     : node server/cli.mjs stop');
   console.log('----------------------------------------------');
-  // 把 serve.mjs 启动横幅里所有非分隔行原样回显（含「访问入口 / 监听地址」等关键信息）。
-  // 此前只过滤「EdgeSSH」/「提示」，把 URL 和端口行漏掉了，用户看不到入口。
-  const banner = tailLog(24).filter((line) => {
+  // 把 serve.mjs 本次启动的横幅原样回显（含「访问入口 / 监听地址」等关键信息）。
+  // 注意必须从 logOffset 起：tail 整个文件会把上次运行留下的旧日志
+  // （例如上次启动失败的「端口 8787 已被占用」）一并带出来误导用户。
+  const banner = readFileSync(logFile).slice(logOffset).toString('utf8').split(/\r?\n/).filter((line) => {
     const trimmed = line.trim();
     return trimmed && trimmed !== '----------------------------------------------';
   });
